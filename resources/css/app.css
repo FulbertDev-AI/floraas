@@ -2,8 +2,70 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../js/**/*.tsx';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-display: Georgia, 'Times New Roman', serif;
+    --color-flora-paper: #f8f5f0;
+    --color-flora-ink: #2e211d;
+    --color-flora-muted: #756860;
+    --color-flora-line: #e4dbd2;
+    --color-flora-accent: #8c5b48;
+    --color-flora-accent-dark: #684132;
+}
+
+:root {
+    color-scheme: light;
+    font-family: var(--font-sans);
+    background: var(--color-flora-paper);
+    color: var(--color-flora-ink);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    min-width: 320px;
+    margin: 0;
+}
+
+button,
+a,
+input,
+select {
+    -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-flora-accent);
+    outline-offset: 3px;
+}
+
+.admin-input {
+    width: 100%;
+    min-height: 3rem;
+    border: 1px solid var(--color-flora-line);
+    background: white;
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+}
+
+.admin-input:focus {
+    border-color: var(--color-flora-accent);
+    outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

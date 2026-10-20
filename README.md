@@ -1,58 +1,156 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# FLORAA’S
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Boutique e-commerce monolithique construite avec Laravel 13, PHP 8.3+, Inertia.js, React, TypeScript, Tailwind CSS 4 et Vite.
 
-## About Laravel
+## Prérequis
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.3 ou supérieur et les extensions Laravel nécessaires (PDO pour le moteur choisi, OpenSSL, Mbstring, Fileinfo, Ctype, JSON, Tokenizer, XML).
+- Composer 2.
+- Node.js 20.19+ ou 22.12+ et npm.
+- MySQL/MariaDB pour un déploiement WAMP, ou SQLite pour un environnement local isolé.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Sur WAMP, vérifiez que `php` et `composer` en ligne de commande utilisent la version PHP souhaitée (`php -v`) et que l’extension PDO correspondante est activée.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Installation locale
 
-## Learning Laravel
+Depuis `C:\wamp64\www\floraas` :
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```powershell
+composer install
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+php artisan key:generate
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Configurez ensuite `.env` avant de lancer les migrations.
 
-## Contributing
+### MySQL avec WAMP
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Créez une base vide dans MySQL, puis indiquez les paramètres de connexion dans `.env` :
 
-## Code of Conduct
+```dotenv
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=floraas
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Adaptez l’utilisateur et le mot de passe à votre installation. Ne remplacez pas `php artisan migrate` par `migrate:fresh` sur une base contenant des données : `migrate:fresh` supprime toutes les tables.
 
-## Security Vulnerabilities
+La migration Laravel des jobs limite à 120 caractères les colonnes du nouvel index composé de `failed_jobs`, pour rester sous la limite de 1000 octets rencontrée avec certains MySQL/MariaDB WAMP.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### SQLite (optionnel)
 
-## License
+Pour un environnement local sans serveur MySQL :
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```powershell
+if (-not (Test-Path database\database.sqlite)) { New-Item -ItemType File -Path database\database.sqlite }
+```
+
+Puis configurez `DB_CONNECTION=sqlite` dans `.env`.
+
+### Migrations et stockage
+
+Une fois la base sélectionnée et créée :
+
+```powershell
+php artisan migrate
+php artisan storage:link
+npm ci
+```
+
+`php artisan migrate` applique uniquement les migrations en attente. Il ne supprime pas les données existantes. Les tests utilisent leur propre base SQLite en mémoire et ne nécessitent pas de réinitialiser la base WAMP.
+
+### Lancer l’application
+
+Dans deux terminaux depuis la racine du dépôt :
+
+```powershell
+php artisan serve
+```
+
+```powershell
+npm.cmd run dev
+```
+
+Ouvrez l’URL indiquée par `php artisan serve` (par défaut `http://127.0.0.1:8000`). Pour construire les assets de production :
+
+```powershell
+npm.cmd run build
+```
+
+## Premier compte administrateur
+
+Les inscriptions publiques créent uniquement des comptes clients. Après avoir exécuté les migrations, créez le premier administrateur avec :
+
+```powershell
+php artisan app:create-admin-user
+```
+
+La commande demande l’adresse e-mail, le nom et un mot de passe confirmé d’au moins 12 caractères. Le mot de passe est saisi de manière masquée. Ne fournissez pas de mot de passe via une commande enregistrée dans l’historique du terminal.
+
+L’administration est accessible après connexion à `/admin`. Les routes sont protégées par authentification et rôle administrateur côté serveur.
+
+## Catalogue de démonstration
+
+La commande `php artisan db:seed` ne crée volontairement ni utilisateur de test ni catalogue artificiel.
+
+Pour vérifier l’affichage avec des produits fictifs, exécutez explicitement :
+
+```powershell
+php artisan db:seed --class=DemoCatalogSeeder
+```
+
+Ce seeder crée des références préfixées `DÉMO`, dans la devise fictive `XXX`, avec stock nul. Il est idempotent et sert uniquement à la prévisualisation ; ne l’utilisez pas comme catalogue commercial ou en production.
+
+## Fonctionnalités disponibles
+
+- Boutique publique reliée aux produits, catégories, collections et variantes persistés.
+- Recherche, tri, filtre de disponibilité et fiches produit.
+- Référencement technique : métadonnées, données structurées de produit, `robots.txt` et sitemap XML dynamique.
+- Administration des produits, images, catégorie, collection, publication, prix, variantes et stock.
+- Gestion des catégories et collections, paramètres de la page d’accueil et annonce.
+- Panier session dont les prix sont recalculés côté serveur.
+- Demande de commande enregistrée avec instantané des noms, références, variantes, quantités, prix et devise.
+- Espace admin de consultation des demandes avec transitions limitées à « client contacté » ou « annulée ».
+- Compte client avec historique et détail des demandes transmises en étant connecté, isolés par utilisateur.
+
+Les demandes restent explicitement non confirmées ; le statut de paiement reste `not_started`. Aucun paiement ni frais de livraison ne sont simulés. Le stock n’est pas réservé ou décrémenté lors d’une simple demande.
+
+## Paramètres commerciaux à fournir
+
+Avant d’ouvrir un véritable parcours de vente, le responsable de la boutique doit fournir et valider :
+
+- Pays de vente, devise ISO 4217, coordonnées commerciales et informations légales.
+- Tarifs, zones, délais et transporteurs de livraison.
+- Prestataire de paiement et identifiants secrets fournis via l’environnement de production.
+- Configuration SMTP pour les courriels transactionnels (le mailer par défaut journalise les messages en local).
+- Textes, logo, photographie et données produits autorisés pour publication.
+
+Ne configurez pas un paiement réel avant d’avoir implémenté et testé la vérification des retours/webhooks du prestataire, les règles de réservation et de décrément de stock, ainsi que les transitions de commande correspondantes.
+
+## Tests et contrôles
+
+```powershell
+php artisan route:list --except-vendor
+vendor\bin\pint --test
+php artisan test --compact
+npm.cmd run typecheck
+npm.cmd run build
+```
+
+PHPUnit est configuré pour SQLite en mémoire (`phpunit.xml`). Les suites fonctionnelles peuvent donc migrer leur base isolée sans toucher à la base commerciale.
+
+## Déploiement et exploitation
+
+Le déploiement doit fournir PHP/Composer et Node/npm compatibles, une base sauvegardée, les variables d’environnement via le gestionnaire de secrets de l’hébergeur, et un stockage persistant pour les fichiers publics. Une procédure de production doit au minimum :
+
+1. Installer les dépendances PHP sans les outils de développement (`composer install --no-dev --optimize-autoloader`).
+2. Installer/construire les assets lors du build (`npm ci`, `npm run build`).
+3. Déployer les fichiers et variables d’environnement, puis exécuter `php artisan migrate --force`.
+4. Créer le lien de stockage si l’hébergeur ne le gère pas automatiquement (`php artisan storage:link`).
+5. Exécuter `php artisan optimize` et configurer un scheduler/worker si des tâches ou files sont activés.
+6. Vérifier `/up`, les journaux, les sauvegardes/restaurations et les permissions du stockage.
+
+Ne versionnez jamais `.env`, clés API, mots de passe ou sauvegardes contenant des données personnelles. Aucun fournisseur de paiement, de livraison ou d’hébergement n’est imposé par le dépôt.
