@@ -170,7 +170,7 @@ class AdminProductTest extends TestCase
             'price' => '12.50',
             'currency' => 'EUR',
             'stock_quantity' => 3,
-            'is_featured' => false,
+            'is_featured' => true,
             'is_new' => false,
             'is_published' => true,
             'category_ids' => [$category->id],
@@ -186,6 +186,19 @@ class AdminProductTest extends TestCase
         $this->assertTrue($image->is_primary);
         $this->assertTrue($product->categories->contains($category));
         Storage::disk('public')->assertExists($image->path);
+
+        $imageUrl = '/storage/'.$image->path;
+
+        $this->get('/shop')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('products.data.0.primary_image.url', $imageUrl));
+        $this->get('/')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('featuredProducts.0.primary_image.url', $imageUrl));
+        $this->get('/products/baume-de-soin')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('product.primary_image.url', $imageUrl)
+                ->where('product.images.0.url', $imageUrl));
     }
 
     public function test_admin_can_select_an_existing_product_image_as_primary(): void
