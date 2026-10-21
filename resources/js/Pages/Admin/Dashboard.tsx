@@ -5,6 +5,7 @@ type Metrics = {
     published_products: number;
     draft_products: number;
     out_of_stock_products: number;
+    categories: number;
     pending_order_requests: number;
 };
 
@@ -13,6 +14,7 @@ export default function Dashboard({ metrics }: { metrics: Metrics }) {
         { label: 'Produits publiés', value: metrics.published_products },
         { label: 'Brouillons', value: metrics.draft_products },
         { label: 'En rupture', value: metrics.out_of_stock_products },
+        { label: 'Catégories', value: metrics.categories },
         { label: 'Demandes en attente', value: metrics.pending_order_requests },
     ];
 
@@ -28,7 +30,7 @@ export default function Dashboard({ metrics }: { metrics: Metrics }) {
                     Ajouter un produit
                 </Link>
             </div>
-            <section aria-label="Indicateurs du catalogue" className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <section aria-label="Indicateurs du catalogue" className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
                 {cards.map((card) => (
                     <article className="border border-flora-line bg-white p-5" key={card.label}>
                         <p className="text-sm text-flora-muted">{card.label}</p>
@@ -36,17 +38,26 @@ export default function Dashboard({ metrics }: { metrics: Metrics }) {
                     </article>
                 ))}
             </section>
-            <section className="mt-8 border border-flora-line bg-white p-6">
-                <h2 className="font-display text-2xl">Votre catalogue</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-flora-muted">
-                    Les indicateurs proviennent du catalogue et des demandes sauvegardées. Les demandes restent non confirmées tant que le paiement et la livraison ne sont pas configurés.
+            <section className="mt-8 border border-flora-line bg-white p-5 sm:p-7">
+                <h2 className="font-display text-2xl">Raccourcis</h2>
+                <p className="mt-2 text-sm leading-6 text-flora-muted">
+                    Les chiffres ci-dessus sont calculés à partir du catalogue et des demandes enregistrées.
+                    Les demandes restent non confirmées tant que le paiement et la livraison ne sont pas configurés.
                 </p>
-                <Link className="mt-5 inline-block text-sm underline underline-offset-4" href="/admin/products">
-                    Gérer les produits
-                </Link>
-                <Link className="ml-5 inline-block text-sm underline underline-offset-4" href="/admin/orders">
-                    Consulter les demandes
-                </Link>
+                <div className="mt-5 flex flex-wrap gap-3">
+                    <Link className="inline-flex min-h-11 items-center bg-flora-ink px-4 text-sm text-white transition-colors hover:bg-flora-accent-dark" href="/admin/products/create">
+                        Ajouter un produit
+                    </Link>
+                    <Link className="inline-flex min-h-11 items-center border border-flora-line px-4 text-sm transition-colors hover:bg-flora-paper" href="/admin/categories">
+                        Gérer les catégories
+                    </Link>
+                    <Link className="inline-flex min-h-11 items-center border border-flora-line px-4 text-sm transition-colors hover:bg-flora-paper" href="/admin/orders">
+                        Voir les demandes
+                    </Link>
+                    <Link className="inline-flex min-h-11 items-center border border-flora-line px-4 text-sm transition-colors hover:bg-flora-paper" href="/admin/settings">
+                        Modifier le site
+                    </Link>
+                </div>
             </section>
         </AdminLayout>
     );

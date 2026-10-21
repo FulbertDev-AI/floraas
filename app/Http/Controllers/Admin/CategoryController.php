@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Models\Category;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -13,15 +16,31 @@ use Inertia\Response;
 
 class CategoryController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $categories = Category::query()
-            ->withCount('products')
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+        ]);
+        $search = trim($filters['q'] ?? '');
+        $query = Category::query()
+            ->with('parentCategory:id,name')
+            ->withCount('products');
+
+        if ($search !== '') {
+            $query->where(function (Builder $categories) use ($search): void {
+                $categories->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('slug', 'like', '%'.$search.'%');
+            });
+        }
+
+        $categories = $query
             ->orderBy('sort_order')
             ->orderBy('name')
             ->paginate(20)
+            ->withQueryString()
             ->through(fn (Category $category): array => [
                 ...$category->attributesToArray(),
+                'parent_name' => $category->parentCategory?->name,
                 'image_url' => $category->image_path ? Storage::disk('public')->url($category->image_path) : null,
             ]);
 
@@ -29,6 +48,7 @@ class CategoryController extends Controller
             'kind' => 'categories',
             'title' => 'Catégories',
             'items' => $categories,
+            'query' => $search,
         ]);
     }
 
@@ -38,6 +58,7 @@ class CategoryController extends Controller
             'kind' => 'categories',
             'title' => 'Nouvelle catégorie',
             'item' => null,
+            'parents' => $this->parentCategories(),
         ]);
     }
 
@@ -47,6 +68,7 @@ class CategoryController extends Controller
         $category = new Category;
         $category->fill([
             'name' => $data['name'],
+            'parent_id' => $data['parent_id'] ?? null,
             'slug' => $this->uniqueSlug($data['slug'] ?? '', $data['name']),
             'description' => $data['description'] ?? null,
             'is_published' => $data['is_published'],
@@ -65,8 +87,10 @@ class CategoryController extends Controller
             'title' => 'Modifier la catégorie',
             'item' => [
                 ...$category->attributesToArray(),
+                'parent_name' => $category->parentCategory?->name,
                 'image_url' => $category->image_path ? Storage::disk('public')->url($category->image_path) : null,
             ],
+            'parents' => $this->parentCategories($category),
         ]);
     }
 
@@ -77,6 +101,7 @@ class CategoryController extends Controller
         $imagePath = $request->file('image')?->store('categories', 'public') ?? $oldImagePath;
         $category->fill([
             'name' => $data['name'],
+            'parent_id' => $data['parent_id'] ?? null,
             'slug' => $this->uniqueSlug($data['slug'] ?? '', $data['name'], $category),
             'description' => $data['description'] ?? null,
             'image_path' => $imagePath,
@@ -94,9 +119,9 @@ class CategoryController extends Controller
 
     public function destroy(Category $category): RedirectResponse
     {
-        if ($category->products()->exists()) {
+        if ($category->products()->exists() || $category->childCategories()->exists()) {
             return back()->withErrors([
-                'category' => 'Cette catégorie contient des produits. Réaffectez-les avant de la supprimer.',
+                'category' => 'Cette catégorie contient des produits ou des sous-catégories. Réaffectez-les avant de la supprimer.',
             ]);
         }
 
@@ -119,5 +144,18 @@ class CategoryController extends Controller
         }
 
         return $query->exists() ? $slug.'-'.Str::lower(Str::random(6)) : $slug;
+    }
+
+    /**
+     * @return Collection<int, Category>
+     */
+    private function parentCategories(?Category $category = null): Collection
+    {
+        return Category::query()
+            ->whereNull('parent_id')
+            ->when($category, fn (Builder $query): Builder => $query->where('id', '<>', $category->getKey()))
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name']);
     }
 }

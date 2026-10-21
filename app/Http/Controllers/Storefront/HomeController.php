@@ -19,6 +19,7 @@ class HomeController extends Controller
     {
         $categories = Category::query()
             ->where('is_published', true)
+            ->whereNull('parent_id')
             ->orderBy('sort_order')
             ->orderBy('name')
             ->limit(8)
@@ -43,17 +44,24 @@ class HomeController extends Controller
             ->get();
         $homepage = StoreSetting::query()->where('key', 'homepage')->first()?->value ?? [];
         $homepage = array_merge([
-            'hero_title' => 'La beauté, à votre image.',
-            'hero_description' => 'Explorez la sélection FLORAA’S.',
-            'hero_button_text' => 'Explorer la boutique',
+            'hero_eyebrow' => 'RÉVÉLEZ VOTRE ÉCLAT',
+            'hero_title' => 'La beauté qui vous ressemble',
+            'hero_description' => 'Découvrez notre sélection de soins, maquillage et essentiels beauté, pensés pour révéler votre éclat au quotidien.',
+            'hero_button_text' => 'Découvrir la boutique',
             'hero_button_url' => '/shop',
             'hero_image_path' => null,
+            'hero_image_alt' => '',
+            'hero_image_position' => 'center',
+            'hero_visible' => true,
             'brand_story' => '',
             'show_categories' => true,
             'show_featured_products' => true,
             'show_new_products' => true,
             'show_brand_story' => false,
         ], $homepage);
+        foreach (['hero_visible', 'show_categories', 'show_featured_products', 'show_new_products', 'show_brand_story'] as $setting) {
+            $homepage[$setting] = filter_var($homepage[$setting], FILTER_VALIDATE_BOOL);
+        }
         $homepage['hero_image_url'] = $homepage['hero_image_path']
             ? Storage::disk('public')->url($homepage['hero_image_path'])
             : null;

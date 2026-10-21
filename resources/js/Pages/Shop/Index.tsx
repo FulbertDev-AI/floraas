@@ -21,6 +21,8 @@ type ListingProps = {
         q: string;
         sort: string;
         in_stock: boolean;
+        category: string;
+        on_sale: boolean;
     };
 };
 
@@ -45,9 +47,10 @@ export default function Index({ title, context, products, filters }: ListingProp
 
                 <form
                     action={typeof window === 'undefined' ? '/shop' : window.location.pathname}
-                    className="mt-8 grid gap-3 border-y border-flora-line py-4 sm:grid-cols-[1fr_220px_auto_auto] sm:items-end"
+                    className="mt-8 grid gap-3 border-y border-flora-line py-4 sm:grid-cols-[1fr_200px_auto_auto_auto] sm:items-end"
                     method="get"
                 >
+                    {filters.category && <input name="category" type="hidden" value={filters.category} />}
                     <label className="grid gap-1 text-xs text-flora-muted">
                         Rechercher
                         <input
@@ -75,6 +78,10 @@ export default function Index({ title, context, products, filters }: ListingProp
                     <label className="flex min-h-11 items-center gap-2 text-sm">
                         <input defaultChecked={filters.in_stock} name="in_stock" type="checkbox" value="1" />
                         En stock
+                    </label>
+                    <label className="flex min-h-11 items-center gap-2 text-sm">
+                        <input defaultChecked={filters.on_sale} name="on_sale" type="checkbox" value="1" />
+                        En promotion
                     </label>
                     <button className="min-h-11 bg-flora-ink px-5 text-sm text-white hover:bg-flora-accent-dark" type="submit">
                         Appliquer

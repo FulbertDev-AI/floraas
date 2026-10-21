@@ -3,6 +3,8 @@ import { AdminLayout } from '../../../Components/AdminLayout';
 
 type Taxonomy = {
     id: number;
+    parent_id: number | null;
+    parent_name: string | null;
     name: string;
     slug: string;
     image_url: string | null;
@@ -14,6 +16,7 @@ type Taxonomy = {
 type Props = {
     kind: 'categories' | 'collections';
     title: string;
+    query?: string;
     items: {
         data: Taxonomy[];
         links: Array<{ url: string | null; label: string; active: boolean }>;
@@ -28,7 +31,7 @@ type ErrorProps = {
     };
 };
 
-export default function Index({ kind, title, items }: Props) {
+export default function Index({ kind, title, items, query = '' }: Props) {
     const { props } = usePage<ErrorProps>();
     const resourceTitle = kind === 'categories' ? 'catégorie' : 'collection';
     const baseUrl = `/admin/${kind}`;
@@ -46,6 +49,21 @@ export default function Index({ kind, title, items }: Props) {
                     Ajouter une {resourceTitle}
                 </Link>
             </div>
+            {kind === 'categories' && (
+                <form action={baseUrl} className="mt-6 flex max-w-xl flex-col gap-3 sm:flex-row" method="get" role="search">
+                    <label className="sr-only" htmlFor="category-search">Rechercher une catégorie</label>
+                    <input
+                        className="admin-input min-w-0 flex-1"
+                        defaultValue={query}
+                        id="category-search"
+                        maxLength={100}
+                        name="q"
+                        placeholder="Rechercher par nom ou slug"
+                        type="search"
+                    />
+                    <button className="min-h-12 bg-flora-ink px-5 text-sm text-white hover:bg-flora-accent-dark" type="submit">Rechercher</button>
+                </form>
+            )}
             {(props.errors?.category || props.errors?.collection) && (
                 <p className="mt-5 border border-red-900/20 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">
                     {props.errors.category ?? props.errors.collection}
@@ -64,6 +82,7 @@ export default function Index({ kind, title, items }: Props) {
                                     <p className="mt-1 text-sm text-flora-muted">
                                         /{item.slug} · {item.products_count} produit(s)
                                     </p>
+                                    {item.parent_name && <p className="mt-1 text-xs text-flora-muted">Sous-catégorie de {item.parent_name}</p>}
                                     <p className="mt-1 text-xs uppercase tracking-wide text-flora-muted">
                                         {item.is_published ? 'Publié' : 'Brouillon'} · Ordre {item.sort_order}
                                     </p>

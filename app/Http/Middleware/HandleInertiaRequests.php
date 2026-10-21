@@ -49,20 +49,27 @@ class HandleInertiaRequests extends Middleware
             ],
             'cart_count' => fn (): int => collect($request->session()->get('storefront.cart', []))
                 ->sum(fn (array $line): int => (int) ($line['quantity'] ?? 0)),
-            'categories' => fn (): array => Category::query()
+            'navigation_categories' => fn (): array => Category::query()
                 ->where('is_published', true)
                 ->orderBy('sort_order')
                 ->orderBy('name')
-                ->get(['id', 'name', 'slug', 'image_path'])
+                ->get(['id', 'name', 'slug', 'image_path', 'parent_id'])
                 ->map(fn (Category $category): array => [
                     'id' => $category->id,
                     'name' => $category->name,
                     'slug' => $category->slug,
+                    'parent_id' => $category->parent_id,
                     'image_url' => $category->image_path
                         ? Storage::disk('public')->url($category->image_path)
                         : null,
                 ])
                 ->all(),
+            'store_contact' => fn (): array => array_merge([
+                'location' => 'Lomé, Togo',
+                'phone' => '',
+                'email' => '',
+                'hours' => '',
+            ], StoreSetting::query()->where('key', 'contact')->value('value') ?? []),
             'announcement' => fn (): ?array => StoreSetting::query()
                 ->where('key', 'announcement')
                 ->value('value'),

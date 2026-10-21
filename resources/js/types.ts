@@ -23,4 +23,5 @@ export type CategorySummary = {
     name: string;
     slug: string;
     image_url: string | null;
+    parent_id: number | null;
 };

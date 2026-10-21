@@ -4,6 +4,7 @@ import { AdminLayout } from '../../../Components/AdminLayout';
 
 type TaxonomyInput = {
     id: number;
+    parent_id?: number | null;
     name: string;
     slug: string;
     description: string | null;
@@ -12,13 +13,20 @@ type TaxonomyInput = {
     sort_order: number;
 };
 
+type ParentCategory = {
+    id: number;
+    name: string;
+};
+
 type Props = {
     kind: 'categories' | 'collections';
     title: string;
     item: TaxonomyInput | null;
+    parents?: ParentCategory[];
 };
 
 type FormData = {
+    parent_id: number | null;
     name: string;
     slug: string;
     description: string;
@@ -36,9 +44,10 @@ function slugify(value: string): string {
         .replace(/^-|-$/g, '');
 }
 
-export default function Form({ kind, title, item }: Props) {
+export default function Form({ kind, title, item, parents = [] }: Props) {
     const baseUrl = `/admin/${kind}`;
     const form = useForm<FormData>({
+        parent_id: item?.parent_id ?? null,
         name: item?.name ?? '',
         slug: item?.slug ?? '',
         description: item?.description ?? '',
@@ -65,6 +74,20 @@ export default function Form({ kind, title, item }: Props) {
                 <Link className="text-sm underline underline-offset-4" href={baseUrl}>Retour à la liste</Link>
             </div>
             <form className="grid max-w-3xl gap-6 border border-flora-line bg-white p-5 sm:p-8" onSubmit={submit}>
+                {kind === 'categories' && (
+                    <Field label="Catégorie parente" error={form.errors.parent_id}>
+                        <select
+                            className="admin-input"
+                            onChange={(event) => form.setData('parent_id', event.target.value ? Number(event.target.value) : null)}
+                            value={form.data.parent_id ?? ''}
+                        >
+                            <option value="">Catégorie principale</option>
+                            {parents.map((parent) => (
+                                <option key={parent.id} value={parent.id}>{parent.name}</option>
+                            ))}
+                        </select>
+                    </Field>
+                )}
                 <Field label="Nom" error={form.errors.name}>
                     <input className="admin-input" onChange={(event) => form.setData('name', event.target.value)} required value={form.data.name} />
                 </Field>

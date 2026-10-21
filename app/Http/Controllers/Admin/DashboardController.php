@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
 use Inertia\Inertia;
@@ -17,6 +18,7 @@ class DashboardController extends Controller
                 'published_products' => Product::query()->published()->count(),
                 'draft_products' => Product::query()->where('is_published', false)->count(),
                 'out_of_stock_products' => Product::query()->where('stock_quantity', 0)->count(),
+                'categories' => Category::query()->count(),
                 'pending_order_requests' => Order::query()
                     ->where('status', Order::STATUS_PENDING_CONFIGURATION)
                     ->count(),

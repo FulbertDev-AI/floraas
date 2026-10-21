@@ -25,12 +25,19 @@ class CatalogController extends Controller
     public function category(Request $request, Category $category): Response
     {
         abort_unless($category->is_published, 404);
+        $categoryIds = Category::query()
+            ->where('is_published', true)
+            ->where(function (Builder $categories) use ($category): void {
+                $categories->whereKey($category->getKey())
+                    ->orWhere('parent_id', $category->getKey());
+            })
+            ->pluck('id');
 
         return $this->listing(
             $request,
             Product::query()->published()->whereHas(
                 'categories',
-                fn (Builder $query): Builder => $query->whereKey($category->getKey()),
+                fn (Builder $query): Builder => $query->whereIn('categories.id', $categoryIds),
             ),
             $category->name,
             CategoryResource::make($category)->resolve($request),
@@ -159,6 +166,8 @@ class CatalogController extends Controller
             'q' => ['nullable', 'string', 'max:100'],
             'sort' => ['nullable', Rule::in(['relevance', 'newest', 'price_asc', 'price_desc'])],
             'in_stock' => ['nullable', 'boolean'],
+            'category' => ['nullable', 'string', 'max:191'],
+            'on_sale' => ['nullable', 'boolean'],
         ]);
 
         $search = trim($filters['q'] ?? '');
@@ -179,6 +188,31 @@ class CatalogController extends Controller
                         $variants->where('is_available', true)->where('stock_quantity', '>', 0);
                     });
             });
+        }
+
+        $categorySlug = trim($filters['category'] ?? '');
+
+        if ($categorySlug !== '') {
+            $categoryIds = Category::query()
+                ->where('is_published', true)
+                ->where(function (Builder $categories) use ($categorySlug): void {
+                    $categories->where('slug', $categorySlug)
+                        ->orWhereIn('parent_id', Category::query()
+                            ->select('id')
+                            ->where('slug', $categorySlug)
+                            ->where('is_published', true));
+                })
+                ->pluck('id');
+
+            $query->whereHas(
+                'categories',
+                fn (Builder $categories): Builder => $categories->whereIn('categories.id', $categoryIds),
+            );
+        }
+
+        if (filter_var($filters['on_sale'] ?? false, FILTER_VALIDATE_BOOL)) {
+            $query->whereNotNull('compare_at_minor')
+                ->whereColumn('compare_at_minor', '>', 'price_minor');
         }
 
         match ($filters['sort'] ?? 'relevance') {
@@ -202,6 +236,8 @@ class CatalogController extends Controller
                 'q' => $search,
                 'sort' => $filters['sort'] ?? 'relevance',
                 'in_stock' => filter_var($filters['in_stock'] ?? false, FILTER_VALIDATE_BOOL),
+                'category' => $categorySlug,
+                'on_sale' => filter_var($filters['on_sale'] ?? false, FILTER_VALIDATE_BOOL),
             ],
         ]);
     }

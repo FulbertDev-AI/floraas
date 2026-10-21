@@ -23,6 +23,7 @@ class CategoryResource extends JsonResource
             'id' => $category->id,
             'name' => $category->name,
             'slug' => $category->slug,
+            'parent_id' => $category->parent_id,
             'image_url' => $category->image_path
                 ? Storage::disk('public')->url($category->image_path)
                 : null,

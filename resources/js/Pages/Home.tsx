@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { ProductCard } from '../Components/ProductCard';
 import { StoreLayout } from '../Components/StoreLayout';
+import { StoreIcon } from '../Components/StoreIcon';
 import type { CategorySummary, ProductSummary } from '../types';
 
 type HomeProps = {
@@ -8,11 +9,15 @@ type HomeProps = {
     featuredProducts: ProductSummary[];
     newProducts: ProductSummary[];
     homepage: {
+        hero_eyebrow: string;
         hero_title: string;
         hero_description: string | null;
         hero_button_text: string;
         hero_button_url: string;
         hero_image_url: string | null;
+        hero_image_alt: string;
+        hero_image_position: string;
+        hero_visible: boolean;
         brand_story: string;
         show_categories: boolean;
         show_featured_products: boolean;
@@ -28,37 +33,53 @@ export default function Home({ categories, featuredProducts, newProducts, homepa
                 <meta content={homepage.hero_description ?? 'Découvrez la sélection FLORAA’S.'} name="description" />
                 <meta content="website" property="og:type" />
             </Head>
-            <section className="mx-auto grid max-w-7xl gap-8 px-5 pb-16 pt-10 md:grid-cols-[1fr_0.9fr] md:items-center md:gap-14 md:pb-24 md:pt-16 lg:px-10">
-                <div className="max-w-xl py-5">
-                    <p className="text-xs uppercase tracking-[0.22em] text-flora-accent">Bienvenue chez FLORAA’S</p>
-                    <h1 className="mt-5 font-display text-5xl leading-[1.04] tracking-tight sm:text-6xl lg:text-7xl">{homepage.hero_title}</h1>
-                    {homepage.hero_description && (
-                        <p className="mt-6 max-w-md text-base leading-7 text-flora-muted">{homepage.hero_description}</p>
-                    )}
-                    <Link
-                        className="mt-8 inline-flex min-h-12 items-center justify-center bg-flora-ink px-7 text-sm text-white transition-colors hover:bg-flora-accent-dark"
-                        href={homepage.hero_button_url}
-                    >
-                        {homepage.hero_button_text}
-                    </Link>
-                </div>
-                <div className="relative aspect-[5/4] overflow-hidden bg-[#e9ded3]">
+            {homepage.hero_visible && (
+                <section aria-labelledby="homepage-hero-title" className="relative isolate flex min-h-[570px] items-center overflow-hidden bg-[#eee4dc] sm:min-h-[620px] lg:min-h-[680px]">
                     {homepage.hero_image_url ? (
-                        <img alt="" className="h-full w-full object-cover" src={homepage.hero_image_url} />
+                        <img
+                            alt={homepage.hero_image_alt}
+                            className="absolute inset-0 h-full w-full object-cover"
+                            fetchPriority="high"
+                            src={homepage.hero_image_url}
+                            style={{ objectPosition: homepage.hero_image_position }}
+                        />
                     ) : (
-                        <>
-                            <div aria-hidden="true" className="absolute inset-[8%] border border-white/70" />
-                            <div aria-hidden="true" className="absolute -right-12 -top-14 h-64 w-64 rounded-full bg-[#d2b9a7]/70 blur-2xl" />
-                            <div aria-hidden="true" className="absolute -bottom-20 -left-10 h-72 w-72 rounded-full bg-[#b58c75]/35 blur-3xl" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <p className="max-w-xs px-8 text-center font-display text-4xl leading-tight text-flora-ink/85 sm:text-5xl">
-                                    FLORAA’S
-                                </p>
-                            </div>
-                        </>
+                        <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+                            <div className="absolute -right-24 top-[-16%] h-[125%] w-[70%] rounded-[48%] bg-[#d6bcae]" />
+                            <div className="absolute right-[8%] top-[13%] h-[74%] w-[48%] rounded-[45%] border border-white/60 bg-[#e5d3c9]" />
+                            <div className="absolute right-[23%] top-[24%] h-[62%] w-[34%] rounded-[46%] bg-[#c49d88]/50" />
+                        </div>
                     )}
-                </div>
-            </section>
+                    <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-[#f8f3ee]/95 via-[#f8f3ee]/82 to-[#f8f3ee]/10 md:via-[#f8f3ee]/70" />
+                    <div className="relative z-10 mx-auto w-full max-w-7xl px-5 py-16 sm:py-20 lg:px-10">
+                        <div className="max-w-xl">
+                            <p className="hero-reveal text-[11px] font-medium uppercase tracking-[0.24em] text-flora-accent">
+                                {homepage.hero_eyebrow}
+                            </p>
+                            <h1
+                                className="hero-reveal mt-5 max-w-[12ch] font-display text-5xl leading-[1.04] tracking-tight sm:text-6xl lg:text-7xl"
+                                id="homepage-hero-title"
+                                style={{ animationDelay: '100ms' }}
+                            >
+                                {homepage.hero_title}
+                            </h1>
+                            {homepage.hero_description && (
+                                <p className="hero-reveal mt-6 max-w-md text-base leading-7 text-flora-muted sm:text-lg" style={{ animationDelay: '180ms' }}>
+                                    {homepage.hero_description}
+                                </p>
+                            )}
+                            <Link
+                                className="hero-reveal mt-8 inline-flex min-h-12 items-center gap-4 bg-flora-ink px-6 text-sm text-white transition-colors hover:bg-flora-accent-dark focus-visible:outline-white"
+                                href={homepage.hero_button_url}
+                                style={{ animationDelay: '260ms' }}
+                            >
+                                {homepage.hero_button_text}
+                                <StoreIcon className="h-4 w-4" name="arrow" />
+                            </Link>
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {homepage.show_categories && categories.length > 0 && (
                 <section className="border-y border-flora-line bg-white/50 py-14 sm:py-20">
@@ -113,6 +134,7 @@ export default function Home({ categories, featuredProducts, newProducts, homepa
         </StoreLayout>
     );
 }
+
 
 function ProductSection({
     description,
